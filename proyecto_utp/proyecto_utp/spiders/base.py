@@ -14,4 +14,5 @@ class BaseSpider(CrawlSpider):
                         )
                     
                 }
+
         yield item_to_yield

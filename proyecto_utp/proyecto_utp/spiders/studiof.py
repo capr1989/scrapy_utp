@@ -79,7 +79,7 @@ class StudioFSpider(BaseSpider):
                     self.logger.warning(f"Missing 'link' or 'productReference' in product: {product}")
                     continue  
 
-                yield from self.get_raw_response(product, ProductItem, store="Studio F", what_is_it="Product", sku=sku , response_url=f"https://www.studiofpanama.pa{link}")
+                yield from self.get_raw_response(product, ProductItem, store="Studio F", what_is_it="Product", sku=sku , response_url=f"https://www.studiofpanama.pa{link}", country = 'Panama')
 
 
             # Increment the total products counter

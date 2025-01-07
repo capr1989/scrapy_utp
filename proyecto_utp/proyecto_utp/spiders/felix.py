@@ -2,12 +2,13 @@ import json
 import scrapy
 from urllib.parse import urlencode
 from proyecto_utp.spiders.base import BaseSpider
-
+from proyecto_utp.helpers import handle_pagination
 from proyecto_utp.items import ProductItem
+from proyecto_utp.spiders.mixins import PaginationMixin
 
 
 
-class FelixSpider(BaseSpider):
+class FelixSpider(BaseSpider, PaginationMixin):
     name = "felix"
     allowed_domains = ["felix.com.pa", "rebuyengine.com"]  
     base_url = "https://felix.com.pa/collections/mujer/products.json"
@@ -24,6 +25,8 @@ class FelixSpider(BaseSpider):
         super(FelixSpider, self).__init__(*args, **kwargs)
         self.total_products = 0
         self.filtered_products = 0
+        current_page_key = "page"  # Define pagination key
+        callback = None
         self.headers = {
             'accept': '*/*',
             'accept-language': 'es-PA,es-419;q=0.9,es;q=0.8,en;q=0.7',
@@ -85,14 +88,9 @@ class FelixSpider(BaseSpider):
                     meta={'product': product},
                     dont_filter=True  
                 )
-
-        if len(products) == 250:
-            # Increment page number and fetch the next page
-            params = response.meta.get('params', {})
-            params['page'] = params.get('page', 1) + 1
-            next_url = f"{self.base_url}?{urlencode(params)}"
-            self.logger.info(f"Fetching next page: {next_url}")
-            yield scrapy.Request(next_url, callback=self.parse_page, meta={'params': params})
+        if products:
+            yield from self.handle_pagination(response, params_key='page', items=products, callback=self.parse_page)
+          
         else:
             self.logger.info("No more pages to fetch. Pagination complete.")
             self.logger.info(f"Total products processed: {self.total_products}")
@@ -124,4 +122,3 @@ class FelixSpider(BaseSpider):
         except json.JSONDecodeError as e:
             self.logger.error(f"Failed to parse JSON from {response.url}: {e}")
         
- 
